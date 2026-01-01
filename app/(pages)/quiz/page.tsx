@@ -1,82 +1,51 @@
-"use client"
-import { useState } from "react";
-import { englishPracticeQuestions } from "@/data/questions/questions";
-import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Timer, FileQuestion, ArrowRight } from "lucide-react"
+import Link from "next/link"
 
-export default function QuizPage() {
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const q = englishPracticeQuestions[currentIdx];
+export default function TestListingPage() {
+  const tests = [
+    { id: "SYNONYM", title: "Synonyms Mastery", questions: 4, time: "5 mins", difficulty: "Medium", icon: "BookOpen" },
+    { id: "ANTONYM", title: "Antonyms Challenge", questions: 4, time: "5 mins", difficulty: "Medium", icon: "Zap" },
+    { id: "IDIOM", title: "Idioms & Phrases", questions: 4, time: "5 mins", difficulty: "Hard", icon: "Coffee" },
+    { id: "PHRASAL_VERB", title: "Phrasal Verbs", questions: 4, time: "5 mins", difficulty: "Hard", icon: "Activity" },
+    { id: "GRAMMAR", title: "Grammar Rules", questions: 4, time: "5 mins", difficulty: "Medium", icon: "PenTool" },
+    { id: "ALL", title: "Full Mock Test", questions: 20, time: "25 mins", difficulty: "Mixed", icon: "Brain" },
+  ]
 
   return (
-    <div className="min-h-screen bg-white flex flex-col md:flex-row">
-      {/* Left: Question Area */}
-      <div className="flex-1 p-4 md:p-10 border-r border-slate-100">
-        <div className="max-w-2xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <span className="text-sm font-bold uppercase tracking-wider text-blue-600">{q.category}</span>
-            <span className="text-sm text-slate-400">Question {currentIdx + 1} of {englishPracticeQuestions.length}</span>
-          </div>
-
-          <h2 className="text-xl md:text-2xl font-semibold text-slate-900 mb-8">
-            {q.questionText}
-          </h2>
-
-          <RadioGroup className="space-y-4">
-            {q.options.map((opt) => (
-              <div key={opt.id} className="flex items-center space-x-3 p-4 border rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
-                <RadioGroupItem value={opt.id} id={opt.id} />
-                <Label htmlFor={opt.id} className="flex-1 cursor-pointer text-lg text-slate-700">{opt.text}</Label>
-              </div>
-            ))}
-          </RadioGroup>
-
-          <div className="flex justify-between mt-10">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentIdx(Math.max(0, currentIdx - 1))}
-              disabled={currentIdx === 0}
-            >
-              Previous
-            </Button>
-            <Button
-              className="bg-blue-600 hover:bg-blue-700"
-              onClick={() => setCurrentIdx(Math.min(englishPracticeQuestions.length - 1, currentIdx + 1))}
-            >
-              {currentIdx === englishPracticeQuestions.length - 1 ? "Finish" : "Next Question"}
-            </Button>
-          </div>
-        </div>
+    <div className="container mx-auto p-4 md:p-8 max-w-5xl">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-900">Practice Tests</h1>
+        <p className="text-slate-500">Choose a specific topic or take a full mock test.</p>
       </div>
 
-      {/* Right: Question Palette (Visible on Desktop) */}
-      <div className="w-full md:w-80 p-6 bg-slate-50/50 hidden md:block">
-        <h3 className="font-bold mb-4 text-slate-900">Question Palette</h3>
-        <div className="grid grid-cols-5 gap-2">
-          {englishPracticeQuestions.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentIdx(i)}
-              className={`h-10 w-10 rounded-md border flex items-center justify-center text-sm font-medium transition-all
-                ${currentIdx === i ? 'bg-slate-900 text-white ring-2 ring-offset-2 ring-slate-900' : 'bg-white text-slate-600 hover:border-slate-400'}
-              `}
-            >
-              {i + 1}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-8 space-y-2 border-t pt-6">
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <div className="h-3 w-3 bg-slate-900 rounded"></div> Selected
-          </div>
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <div className="h-3 w-3 bg-white border rounded"></div> Not Visited
-          </div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {tests.map((test) => (
+          <Card key={test.id} className="hover:border-slate-900 transition-all group cursor-pointer hover:shadow-lg">
+            <CardHeader>
+              <CardTitle className="group-hover:text-blue-600 transition-colors flex justify-between items-center">
+                {test.title}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <FileQuestion className="w-4 h-4" /> {test.questions} Questions
+              </div>
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <Timer className="w-4 h-4" /> {test.time}
+              </div>
+            </CardContent>
+            <CardFooter className="bg-slate-50/50 pt-6">
+              <Button asChild className="w-full bg-white text-slate-900 border-slate-200 hover:bg-slate-900 hover:text-white" variant="outline">
+                <Link href={`/quiz/${test.id}`}>
+                  Start Practice <ArrowRight className="ml-2 w-4 h-4" />
+                </Link>
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
       </div>
     </div>
-  );
+  )
 }

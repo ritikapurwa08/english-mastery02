@@ -144,43 +144,29 @@ export interface RunningQuizState {
   isSubmitted: boolean;
 }
 
-// ============ EXAMPLE QUESTION DATA (OPTIONAL) ============
+// ============ USER PROGRESS & HISTORY ============
 
-// Example: one synonym question for testing
-export const sampleQuestions: Question[] = [
-  {
-    id: "Q1",
-    category: "SYNONYM",
-    subTopic: "Vocabulary",
-    difficulty: "EASY",
-    questionText: "Choose the word that is most similar in meaning to 'ABANDON'.",
-    options: [
-      { id: "Q1A", text: "Give up" },
-      { id: "Q1B", text: "Begin" },
-      { id: "Q1C", text: "Protect" },
-      { id: "Q1D", text: "Adopt" }
-    ],
-    correctOptionId: "Q1A",
-    explanation: "To 'abandon' means to 'leave completely' or 'give up' something or someone.",
-    marks: 1,
-    negativeMarks: 0.0,
-    tags: ["SYNONYM", "BASIC"]
-  }
-];
+export interface SavedTestResult {
+  id?: string; // Firestore ID
+  testId: string; // "SYNONYM", "ALL", etc.
+  date: string;
+  totalQuestions: number;
+  correct: number;
+  wrong: number;
+  skipped: number;
+  score: number;
+  totalMarks: number;
+  percentage: number;
+  answers: {
+    questionId: string;
+    userAnswer?: string;
+    isCorrect: boolean;
+    correctAnswer: string;
+    questionText: string;
+    explanation: string;
+  }[];
+}
 
-// Example quiz config using that question
-export const sampleQuizPaper: QuizPaper = {
-  config: {
-    id: "QUIZ1",
-    title: "Sample English Practice Set",
-    description: "Mixed English questions for practice.",
-    totalQuestions: 1,
-    durationSeconds: 300, // 5 minutes
-    allowQuestionNavigation: true,
-    showQuestionPalette: true,
-    showTimer: true,
-    showResultImmediately: true,
-    allowedCategories: ["SYNONYM", "ANTONYM", "GRAMMAR", "IDIOM", "PHRASAL_VERB"]
-  },
-  questionIds: ["Q1"]
-};
+export interface UserProgress {
+  answeredQuestionIds: string[]; // List of all QIDs user has attempted
+}
