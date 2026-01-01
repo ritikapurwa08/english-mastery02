@@ -3,14 +3,21 @@ import { Button } from "@/components/ui/button"
 import { Timer, FileQuestion, ArrowRight } from "lucide-react"
 import Link from "next/link"
 
+import { englishPracticeQuestions } from "@/data/questions/questions"
+
 export default function TestListingPage() {
+  const getCount = (category: string) => {
+    if (category === "ALL") return englishPracticeQuestions.length;
+    return englishPracticeQuestions.filter(q => q.category === category).length;
+  };
+
   const tests = [
-    { id: "SYNONYM", title: "Synonyms Mastery", questions: 4, time: "5 mins", difficulty: "Medium", icon: "BookOpen" },
-    { id: "ANTONYM", title: "Antonyms Challenge", questions: 4, time: "5 mins", difficulty: "Medium", icon: "Zap" },
-    { id: "IDIOM", title: "Idioms & Phrases", questions: 4, time: "5 mins", difficulty: "Hard", icon: "Coffee" },
-    { id: "PHRASAL_VERB", title: "Phrasal Verbs", questions: 4, time: "5 mins", difficulty: "Hard", icon: "Activity" },
-    { id: "GRAMMAR", title: "Grammar Rules", questions: 4, time: "5 mins", difficulty: "Medium", icon: "PenTool" },
-    { id: "ALL", title: "Full Mock Test", questions: 20, time: "25 mins", difficulty: "Mixed", icon: "Brain" },
+    { id: "SYNONYM", title: "Synonyms Mastery", questions: getCount("SYNONYM"), time: "5 mins", difficulty: "Medium", icon: "BookOpen" },
+    { id: "ANTONYM", title: "Antonyms Challenge", questions: getCount("ANTONYM"), time: "5 mins", difficulty: "Medium", icon: "Zap" },
+    { id: "IDIOM", title: "Idioms & Phrases", questions: getCount("IDIOM"), time: "5 mins", difficulty: "Hard", icon: "Coffee" },
+    { id: "PHRASAL_VERB", title: "Phrasal Verbs", questions: getCount("PHRASAL_VERB"), time: "5 mins", difficulty: "Hard", icon: "Activity" },
+    { id: "GRAMMAR", title: "Grammar Rules", questions: getCount("GRAMMAR"), time: "5 mins", difficulty: "Medium", icon: "PenTool" },
+    { id: "ALL", title: "Full Mock Test", questions: getCount("ALL"), time: "25 mins", difficulty: "Mixed", icon: "Brain" },
   ]
 
   return (

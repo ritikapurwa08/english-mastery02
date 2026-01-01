@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/components/context/AuthContext";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, doc, updateDoc, increment, getDoc, setDoc, arrayUnion } from "firebase/firestore";
-import { Loader2, CheckCircle, ArrowRight, Settings2, Play, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle, ArrowRight, Settings2, Play, AlertCircle, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -31,7 +31,7 @@ export default function QuizPage() {
   const [availableQuestions, setAvailableQuestions] = useState(0);
   const [answeredIds, setAnsweredIds] = useState<string[]>([]);
 
-  const [questions, setQuestions] = useState<any[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -105,7 +105,7 @@ export default function QuizPage() {
     let skipped = 0;
     let score = 0;
 
-    const detailedAnswers: any[] = [];
+    const detailedAnswers: SavedTestResult['answers'] = [];
     const newAnsweredIds: string[] = [];
 
     questions.forEach((q: Question) => {
@@ -127,7 +127,7 @@ export default function QuizPage() {
 
         detailedAnswers.push({
             questionId: q.id,
-            userAnswer: userAnswer || null,
+            userAnswer: userAnswer || undefined,
             isCorrect: userAnswer ? isCorrect : false,
             correctAnswer: q.options.find((o: QuestionOption) => o.id === q.correctOptionId)?.text || "N/A",
             questionText: q.questionText,
@@ -159,7 +159,7 @@ export default function QuizPage() {
 
             // 2. Update User XP
             const xpEarned = correct * 10;
-            const updatePromises: any[] = [];
+            const updatePromises: Promise<void>[] = [];
 
             // Update main profile XP
             if (xpEarned > 0) {
@@ -206,8 +206,16 @@ export default function QuizPage() {
   // --- SETUP VIEW ---
   if (setupMode) {
       return (
-          <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-              <Card className="max-w-md w-full">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+              <Button
+                variant="ghost"
+                className="absolute top-4 left-4 text-slate-800 hover:bg-white/50"
+                onClick={() => router.back()}
+              >
+                <ArrowLeft className="w-5 h-5 mr-2" /> Back
+              </Button>
+
+              <Card className="max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-300 border-slate-200/60 max-h-[90vh] flex flex-col">
                   <CardHeader>
                       <CardTitle className="text-2xl flex items-center gap-2">
                           <Settings2 className="w-6 h-6 text-blue-600" /> Configure Test
@@ -216,7 +224,7 @@ export default function QuizPage() {
                           {categoryId === "ALL" ? "Full Mock Test" : `${categoryId} Practice`}
                       </div>
                   </CardHeader>
-                  <CardContent className="space-y-6">
+                  <CardContent className="space-y-6 overflow-y-auto custom-scrollbar">
                       {!user && (
                           <div className="bg-amber-50 p-3 rounded-lg border border-amber-200 text-amber-700 text-sm flex items-center gap-2">
                               <AlertCircle className="w-4 h-4" />
@@ -240,15 +248,16 @@ export default function QuizPage() {
                                   <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                  <SelectItem value="5">5 Questions</SelectItem>
-                                  <SelectItem value="10">10 Questions</SelectItem>
-                                  <SelectItem value="20">20 Questions</SelectItem>
-                                  <SelectItem value="50">50 Questions</SelectItem>
+                                  <SelectItem value={String(availableQuestions)}>All ({availableQuestions})</SelectItem>
+                                  {availableQuestions > 5 && <SelectItem value="5">5 Questions</SelectItem>}
+                                  {availableQuestions > 10 && <SelectItem value="10">10 Questions</SelectItem>}
+                                  {availableQuestions > 20 && <SelectItem value="20">20 Questions</SelectItem>}
+                                  {availableQuestions > 50 && <SelectItem value="50">50 Questions</SelectItem>}
                               </SelectContent>
                           </Select>
                       </div>
 
-                      <div className="flex items-center justify-between border p-3 rounded-lg bg-white">
+                      <div className="flex items-center justify-between border p-3 rounded-lg bg-white shadow-sm">
                           <Label htmlFor="include-answered" className="cursor-pointer">
                               Include answered questions?
                               <div className="text-xs text-slate-400 font-normal">Re-practice what you&apos;ve already solved</div>
@@ -260,9 +269,9 @@ export default function QuizPage() {
                           />
                       </div>
                   </CardContent>
-                  <CardFooter className="flex-col gap-2">
-                      <Button className="w-full h-12 text-lg" onClick={startQuiz} disabled={availableQuestions === 0}>
-                           {availableQuestions === 0 ? "No New Questions" : (<><Play className="w-5 h-5 mr-2" /> Start Test</>)}
+                  <CardFooter className="flex-col gap-2 pt-2 border-t bg-slate-50/50 rounded-b-xl">
+                      <Button className="w-full h-12 text-lg shadow-blue-900/20 shadow-lg transition-transform active:scale-95" onClick={startQuiz} disabled={availableQuestions === 0}>
+                           {availableQuestions === 0 ? "No New Questions" : (<><Play className="w-5 h-5 mr-2 fill-current" /> Start Test</>)}
                       </Button>
                       {availableQuestions === 0 && !includeAnswered && (
                           <p className="text-center text-xs text-slate-500">
@@ -315,7 +324,7 @@ export default function QuizPage() {
                     onValueChange={(val) => handleAnswerObj(q.id, val)}
                     className="space-y-3"
                 >
-                    {q.options.map((opt: any) => (
+                    {q.options.map((opt: QuestionOption) => (
                         <div key={opt.id} className={`flex items-center space-x-3 p-4 border rounded-xl cursor-pointer transition-all ${answers[q.id] === opt.id ? 'border-blue-600 bg-blue-50 ring-1 ring-blue-600' : 'hover:bg-slate-50 border-slate-200'}`}>
                             <RadioGroupItem value={opt.id} id={`${q.id}-${opt.id}`} />
                             <Label htmlFor={`${q.id}-${opt.id}`} className="flex-1 cursor-pointer font-medium text-slate-700">

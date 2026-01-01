@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { toast } from "sonner"
+import Image from "next/image"
 
 // Generate a list of available avatars
 const AVATARS = [
@@ -48,12 +49,36 @@ export default function ProfilePage() {
     }
   };
 
-  if (!user) {
+  if (loading) {
       return (
           <div className="container mx-auto p-8 flex items-center justify-center min-h-[50vh]">
               <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
           </div>
       );
+  }
+
+  if (!user) {
+    return (
+      <div className="container mx-auto p-4 md:p-8 max-w-3xl min-h-[80vh] flex flex-col items-center justify-center text-center space-y-6">
+        <div className="bg-slate-100 p-6 rounded-full">
+            <UserIcon className="w-12 h-12 text-slate-400" />
+        </div>
+        <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-slate-900">Guest Profile</h1>
+            <p className="text-slate-500 max-w-md mx-auto">
+                Create an account to track your progress, save your test history, and earn XP as you master English.
+            </p>
+        </div>
+        <div className="flex gap-4">
+            <Button asChild size="lg" className="px-8">
+                <a href="/login">Sign In</a>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+                <a href="/signup">Create Account</a>
+            </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -98,7 +123,7 @@ export default function ProfilePage() {
 
                   <div className="space-y-2">
                       <Label>Choose Avatar</Label>
-                      <ScrollArea className="h-[300px] w-full rounded-md border p-4 bg-slate-50">
+                      <ScrollArea className="h-75 w-full rounded-md border p-4 bg-slate-50">
                           <div className="grid grid-cols-4 gap-4">
                               {AVATARS.map((avatar, i) => (
                                   <div
@@ -106,7 +131,7 @@ export default function ProfilePage() {
                                       className={`cursor-pointer rounded-full p-1 border-2 transition-all ${selectedAvatar === avatar ? "border-blue-600 ring-2 ring-blue-100 bg-white" : "border-transparent hover:bg-slate-200"}`}
                                       onClick={() => setSelectedAvatar(avatar)}
                                   >
-                                      <img src={avatar} alt={`Avatar ${i}`} className="w-full h-full rounded-full object-cover" />
+                                      <Image height={100} width={100} src={avatar} alt={`Avatar ${i}`} className="w-full h-full rounded-full object-cover" />
                                   </div>
                               ))}
                           </div>
@@ -126,6 +151,25 @@ export default function ProfilePage() {
       </div>
 
       <div className="space-y-6">
+        {(!user.xp || user.xp === 0) && (
+             <Card className="bg-linear-to-r from-blue-50 to-indigo-50 border-blue-200">
+                 <CardContent className="flex flex-col md:flex-row items-center gap-6 p-6">
+                     <div className="bg-white p-4 rounded-full shadow-sm">
+                         <Award className="w-8 h-8 text-blue-600" />
+                     </div>
+                     <div className="space-y-2 flex-1 text-center md:text-left">
+                         <h3 className="text-lg font-bold text-blue-900">Start Your Journey!</h3>
+                         <p className="text-blue-700">
+                             You haven&apos;t earned any XP yet. Complete your first quiz to earn your Student Badge and unlock stats.
+                         </p>
+                     </div>
+                     <Button size="lg" className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto" asChild>
+                         <a href="/quiz">Take a Quiz</a>
+                     </Button>
+                 </CardContent>
+             </Card>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              <Card>
                 <CardHeader className="pb-2">

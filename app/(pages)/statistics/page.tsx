@@ -5,8 +5,24 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianG
 import { TrendingUp, Clock, AlertCircle, CheckCircle2, User as UserIcon } from "lucide-react";
 import { useAuth } from "@/components/context/AuthContext";
 import { db } from "@/lib/firebase";
-import { collection, query, orderBy, getDocs, limit } from "firebase/firestore";
+import { collection, query, orderBy, getDocs } from "firebase/firestore";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { SavedTestResult } from "@/types/quiz.models";
+
+interface HistoryPoint {
+  date: string;
+  score: number;
+  testId: string;
+}
+
+interface CategoryPoint {
+  label: string;
+  val: number;
+  count: number;
+  color: string;
+}
 
 export default function StatisticsPage() {
   const { user } = useAuth();
@@ -18,8 +34,8 @@ export default function StatisticsPage() {
     weakestCategory: "N/A",
     totalXP: 0 // We can take this from user context directly or sum it up
   });
-  const [historyData, setHistoryData] = useState<any[]>([]);
-  const [categoryData, setCategoryData] = useState<any[]>([]);
+  const [historyData, setHistoryData] = useState<HistoryPoint[]>([]);
+  const [categoryData, setCategoryData] = useState<CategoryPoint[]>([]);
 
   useEffect(() => {
     async function fetchStats() {
@@ -29,9 +45,9 @@ export default function StatisticsPage() {
         const q = query(collection(db, "users", user.uid, "testResults"), orderBy("date", "asc"));
         const querySnapshot = await getDocs(q);
 
-        const results: any[] = [];
+        const results: SavedTestResult[] = [];
         querySnapshot.forEach((doc) => {
-            results.push(doc.data());
+            results.push(doc.data() as SavedTestResult);
         });
 
         if (results.length === 0) {
@@ -40,7 +56,7 @@ export default function StatisticsPage() {
         }
 
         // Process for History Chart (Last 10 tests)
-        const recentHistory = results.slice(-10).map((r, i) => ({
+        const recentHistory = results.slice(-10).map((r) => ({
              date: new Date(r.date || Date.now()).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
              score: r.percentage || 0,
              testId: r.testId
@@ -103,6 +119,80 @@ export default function StatisticsPage() {
       );
   }
 
+  if (!user) {
+      return (
+          <div className="relative min-h-screen">
+              {/* Blurred Background with Mock Data */}
+              <div className="absolute inset-0 filter blur-xl opacity-50 pointer-events-none p-10 space-y-8 overflow-hidden">
+                  <div className="flex justify-between items-center">
+                      <div>
+                          <div className="h-10 w-64 bg-slate-200 rounded mb-2"></div>
+                          <div className="h-4 w-48 bg-slate-100 rounded"></div>
+                      </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-6">
+                       {[1,2,3,4].map(i => (
+                           <div key={i} className="h-32 bg-slate-100 rounded-lg"></div>
+                       ))}
+                  </div>
+                  <div className="grid grid-cols-3 gap-8 h-96">
+                       <div className="col-span-2 bg-slate-100 rounded-lg"></div>
+                       <div className="bg-slate-100 rounded-lg"></div>
+                  </div>
+              </div>
+
+              {/* Login Overlay */}
+              <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/30">
+                  <Card className="max-w-md w-full shadow-2xl border-slate-200">
+                      <CardHeader className="text-center">
+                          <div className="mx-auto bg-blue-100 p-4 rounded-full w-fit mb-4">
+                              <TrendingUp className="w-8 h-8 text-blue-600" />
+                          </div>
+                          <CardTitle className="text-2xl">Unlock Analytics</CardTitle>
+                          <CardDescription>
+                              Sign in to view your detailed performance metrics, track your accuracy trends, and identify weak spots.
+                          </CardDescription>
+                      </CardHeader>
+                      <CardContent className="flex flex-col gap-3">
+                          <Button className="w-full text-lg h-12" asChild>
+                              <a href="/login">Sign In to Dashboard</a>
+                          </Button>
+                          <p className="text-xs text-center text-slate-400">
+                              Tracking 15+ performance data points
+                          </p>
+                      </CardContent>
+                  </Card>
+              </div>
+          </div>
+      )
+  }
+
+  if (stats.totalTests === 0) {
+      return (
+          <div className="flex h-screen items-center justify-center p-4">
+              <Card className="max-w-lg w-full text-center border-2 border-dashed bg-slate-50/50">
+                  <CardHeader>
+                      <div className="mx-auto bg-green-100 p-4 rounded-full w-fit mb-4">
+                          <TrendingUp className="w-8 h-8 text-green-600" />
+                      </div>
+                      <CardTitle className="text-2xl">No Statistics Yet</CardTitle>
+                      <CardDescription>
+                          You haven&apos;t taken any tests yet. Complete your first practice session to unlock detailed performance analytics!
+                      </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                      <Button size="lg" className="w-full" asChild>
+                          <Link href="/quiz">Start Your First Test</Link>
+                      </Button>
+                      <p className="text-xs text-slate-400 mt-4">
+                          We&apos;ll track accuracy, speed, and topic mastery.
+                      </p>
+                  </CardContent>
+              </Card>
+          </div>
+      )
+  }
+
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-10 space-y-8 bg-white min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -147,7 +237,7 @@ export default function StatisticsPage() {
             <CardTitle>Accuracy Trend</CardTitle>
             <CardDescription>Your performance over the last 10 tests.</CardDescription>
           </CardHeader>
-          <CardContent className="pt-6 h-[300px]">
+          <CardContent className="pt-6 h-75">
              {historyData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={historyData}>
@@ -162,7 +252,7 @@ export default function StatisticsPage() {
                     <YAxis hide domain={[0, 100]} />
                     <Tooltip
                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                        formatter={(value: any) => [`${value}%`, "Accuracy"]}
+                        formatter={(value: number) => [`${value}%`, "Accuracy"]}
                     />
                     <Area
                     type="monotone"
@@ -175,8 +265,11 @@ export default function StatisticsPage() {
                 </AreaChart>
                 </ResponsiveContainer>
              ) : (
-                 <div className="h-full flex items-center justify-center text-slate-400">
-                     No test history available. Take a quiz!
+                 <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-2">
+                     <p>No test history available.</p>
+                     <Button variant="outline" size="sm" asChild>
+                         <Link href="/quiz">Take a Quiz</Link>
+                     </Button>
                  </div>
              )}
 

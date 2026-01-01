@@ -46,6 +46,34 @@ export default function HistoryPage() {
     );
   }
 
+  if (!user) {
+    return (
+      <div className="container mx-auto p-4 md:p-8 max-w-4xl min-h-screen flex items-center justify-center">
+        <Card className="max-w-md w-full border-dashed border-2 bg-slate-50/50">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center space-y-4">
+             <div className="bg-slate-100 p-4 rounded-full">
+                <Calendar className="w-8 h-8 text-slate-400" />
+             </div>
+             <div className="space-y-1">
+                <h3 className="text-xl font-semibold text-slate-900">Sign in to view History</h3>
+                <p className="text-slate-500 max-w-sm mx-auto">
+                   Track your test results, review your answers, and monitor your progress over time.
+                </p>
+             </div>
+             <div className="flex gap-3 h-10 mt-4">
+                 <Button asChild>
+                     <Link href="/login">Sign In</Link>
+                 </Button>
+                 <Button variant="outline" asChild>
+                     <Link href="/signup">Create Account</Link>
+                 </Button>
+             </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-4xl min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -57,7 +85,7 @@ export default function HistoryPage() {
         <div className="flex items-center gap-2">
            <Filter className="w-4 h-4 text-slate-500" />
            <Select value={filterCategory} onValueChange={setFilterCategory}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-45">
                 <SelectValue placeholder="Filter by Topic" />
             </SelectTrigger>
             <SelectContent>
